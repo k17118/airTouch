@@ -29,7 +29,7 @@
 # Usage
 ```bash
 git clone https://github.com/k17118/airTouch.git
-poen ./airTouch/airTouch/AirTouchWithStoryboard/HandPose.xcodeproj
+open ./airTouch/AirTouchWithStoryboard/HandPose.xcodeproj
 ```
 
 
