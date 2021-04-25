@@ -11,9 +11,11 @@
  
 pose１
 人差し指と中指を上に向けることで上スクロールができます
+<p float="left">
 <img width="256" alt="スクリーンショット 2021-04-25 11 55 22" src="https://user-images.githubusercontent.com/50346054/115978926-b04a6680-a5bd-11eb-8a4a-56f5d859f36e.png">
 pose２<img width="256" alt="スクリーンショット 2021-04-25 11 55 37" src="https://user-images.githubusercontent.com/50346054/115978931-b4768400-a5bd-11eb-8097-15eab2cd8a18.png">
 pose３<img width="256" alt="スクリーンショット 2021-04-25 11 55 50" src="https://user-images.githubusercontent.com/50346054/115978932-b50f1a80-a5bd-11eb-9bcc-6699ff8884a8.png">
+
 
 # Requirement
  
