@@ -14,6 +14,7 @@ import WebKit
 //[app,mode,scroll,corsur]
 public var slideFlag:Bool = true
 public var configList:[Int] = [1, 1, 0]
+
 class CameraViewController: UIViewController {
     
     @IBOutlet weak var web: WKWebView!
@@ -21,6 +22,8 @@ class CameraViewController: UIViewController {
     @IBOutlet weak var back: UIButton!
     
     private var testView:UIView!
+    
+    private var topView:UIView!
     
     private var cameraView: CameraView { view as! CameraView }
     //文字列のURLをURL型にキャスト
@@ -50,16 +53,20 @@ class CameraViewController: UIViewController {
     private var middlePipsConverted:CGPoint?
     
     private var fingersConfidence:Bool?
-
+    
     var viewX:CGFloat!
     var viewY:CGFloat!
     
     private var countPinchFrames:[Int] = [Int]()
     private var countTime:Int = 0
     private let pinchedThreshold:Int = 40
+    private var topCloseFlag:Bool = false
+    
+    private var topColseThreshold:Int = 50
     
     private let colorList:[[UIColor]] = [[.green, .red, .blue], [.yellow, .magenta, .cyan], [.black, .orange, .purple]]
     
+    private var pointsCanvas = UIBezierPath()
     //インジゲーターを宣言
     var indicator = UIActivityIndicatorView()
     
@@ -68,7 +75,7 @@ class CameraViewController: UIViewController {
         
         self.present(configViewController, animated: true, completion: nil)
         
-     }
+    }
     
     func setIndicator(referenceView: UIView) {
         //インジケーターを初期化
@@ -107,11 +114,15 @@ class CameraViewController: UIViewController {
         drawOverlay.fillColor = #colorLiteral(red: 0.9999018312, green: 1, blue: 0.9998798966, alpha: 0).cgColor
         drawOverlay.lineCap = .round
         
+        topView = UIView(frame:CGRect(x: 0, y: 0, width: view.bounds.size.width, height:  view.bounds.size.height))
+        topView.backgroundColor = .white
         
+        view.layer.addSublayer(overlayLayer)//指のマーカー表示
         view.layer.addSublayer(web.layer)//レイヤーとして追加
+        //view.layer.addSublayer(cameraView.overlayLayer)//指のマーカー表示
         //        view.layer.addSublayer(drawOverlay)// ここを書き換えればいけるか
         
-        testView = UIView(frame:CGRect(x: 0, y: 0, width: view.bounds.size.width/8, height: view.bounds.size.height/8))
+        testView = UIView(frame:CGRect(x: 0, y: 0, width: view.bounds.size.width/8, height: view.bounds.size.height/12))
         testView.backgroundColor = .white
         
         // This sample app detects one hand only.
@@ -121,9 +132,14 @@ class CameraViewController: UIViewController {
         // Add state change handler to hand gesture processor.
         //ハンドジェスチャープロセッサに状態変化ハンドラを追加。
         gestureProcessor.didChangeStateClosure = { [weak self] state in
+            
             self?.countTiming()
+            self?.closeTopLayer()
+            let flag:Bool = self!.topCloseFlag
             //ここは毎フレーム呼ばれている
-            self?.handleGestureStateChange(state: state)//描画
+            if(flag){
+                self?.handleGestureStateChange(state: state)//描画
+            }
         }
         
         // Add double tap gesture recognizer for clearing the draw path.
@@ -133,11 +149,15 @@ class CameraViewController: UIViewController {
         recognizer.numberOfTapsRequired = 2
         view.addGestureRecognizer(recognizer)
         
-//        let layer = view.layer.sublayers![0]
-//        view.layer.sublayers![0] = view.layer.sublayers![0]
-//        view.layer.sublayers![0] = layer
-        view.layer.addSublayer(cameraView.overlayLayer)//指のマーカー表示
+        //        let layer = view.layer.sublayers![0]
+        //        view.layer.sublayers![0] = view.layer.sublayers![0]
+        //        view.layer.sublayers![0] = layer
         
+        view.layer.addSublayer(topView.layer)
+        //view.layer.addSublayer(topView.layer)
+        let layers = view.layer.sublayers!
+        
+        print(layers.count)
     }
     
     //最初に読み込まれる
@@ -246,15 +266,15 @@ class CameraViewController: UIViewController {
         // Process new points
         gestureProcessor.processPointsPair((thumbPointConverted, indexPointConverted))
     }
-//    //左のクリックダウン
-//    private func mouseDown(){
-//        guard let mouseDown = CGEvent(mouseEventSource: nil,
-//                                mouseType: .leftMouseDown,
-//                                mouseCursorPosition: CGPoint(x: 200, y: 300),
-//                                mouseButton: .left
-//                                ) else {return}
-//        mouseDown?.post(tap: .cghidEventTap)
-//    }
+    //    //左のクリックダウン
+    //    private func mouseDown(){
+    //        guard let mouseDown = CGEvent(mouseEventSource: nil,
+    //                                mouseType: .leftMouseDown,
+    //                                mouseCursorPosition: CGPoint(x: 200, y: 300),
+    //                                mouseButton: .left
+    //                                ) else {return}
+    //        mouseDown?.post(tap: .cghidEventTap)
+    //    }
     
     //指の形を判定
     private func judgeFingerPose(pointColor: inout UIColor, indexTips: CGPoint, middleTips: CGPoint, indexPips:CGPoint, middlePips:CGPoint, pinchFlag:Bool){
@@ -262,6 +282,7 @@ class CameraViewController: UIViewController {
         //指の検出が無効
         if(fingersConfidence == false){
             //モードviewの貼り付け
+            
             testView.backgroundColor = .white
             view.layer.addSublayer(testView.layer)
             autoAction(modeNumber: -1)
@@ -273,13 +294,14 @@ class CameraViewController: UIViewController {
             
             pointColor = colorList[configList[2]][0]
             //モードviewの貼り付け
-            testView.backgroundColor = .green
+            testView.backgroundColor = colorList[configList[2]][0]
             view.layer.addSublayer(testView.layer)
             
             //.pinchedの連続回数を記録
             countPinchFrames.append(1)// 1 -> pintched
             countPinchFrames.remove(at: 0)//一番古い要素の削除
             
+            print(countOneInList())
             //一定数以上連続したとき
             if(countOneInList() >= pinchedThreshold){
                 autoAction(modeNumber: 3)
@@ -295,17 +317,18 @@ class CameraViewController: UIViewController {
         }
         
         
-//        if((indexTips.y < indexPips.y) && (middleTips.y >= middlePips.y)){
-//            pointColor = .green
-//            //モードviewの貼り付け
-//            testView.backgroundColor = .green
-//            view.layer.addSublayer(testView.layer)
-//            autoAction(modeNumber: 2)
-//            return;
-//        }
+        print(countPinchFrames.count)
+        //        if((indexTips.y < indexPips.y) && (middleTips.y >= middlePips.y)){
+        //            pointColor = .green
+        //            //モードviewの貼り付け
+        //            testView.backgroundColor = .green
+        //            view.layer.addSublayer(testView.layer)
+        //            autoAction(modeNumber: 2)
+        //            return;
+        //        }
         //上モード
         if ((indexTips.y < indexPips.y) && (middleTips.y < middlePips.y)){//第二関節が指先より上
-            pointColor = colorList[configList[2]][1]
+            
             //モードviewの貼り付け
             testView.backgroundColor = colorList[configList[2]][1]
             view.layer.addSublayer(testView.layer)
@@ -330,42 +353,36 @@ class CameraViewController: UIViewController {
         var maxYOffset = web.scrollView.contentSize.height - web.scrollView.frame.size.height;
         var y_offset = web.scrollView.contentOffset.y;//どこかのy座標
         var x_offset = web.scrollView.contentOffset.x;//どこかのx座標
-        let scrollSpeed = configList[1]; //スクロール感度
-//
-//        var mode = 1; //上スクロール，下スクロール，クリックのモード管理
+        let scrollSpeed = 5-configList[1]; //スクロール感度
+        //
+        //        var mode = 1; //上スクロール，下スクロール，クリックのモード管理
         
         operatedWebView(idx: webFlag)//ブラウザボタンの監視
         
-        
-        if(slideFlag){
-            //上スクロール
-            if(modeNumber == 0){
-                web.scrollView.setContentOffset(CGPoint(x: x_offset, y:max(y_offset - web.bounds.size.height/CGFloat(scrollSpeed),0)), animated: true)
-                //viewX = x_offset; viewY = max(y_offset - web.bounds.size.height/CGFloat(scrollSpeed),0)
+        //上スクロール
+        if(modeNumber == 0){
+            web.scrollView.setContentOffset(CGPoint(x: x_offset, y:max(y_offset - web.bounds.size.height/CGFloat(scrollSpeed),0)), animated: true)
+            //viewX = x_offset; viewY = max(y_offset - web.bounds.size.height/CGFloat(scrollSpeed),0)
             //下スクロール
-            }else if(modeNumber == 1){
-                web.scrollView.setContentOffset(CGPoint(x: x_offset, y:min(y_offset + web.bounds.size.height/CGFloat(scrollSpeed), maxYOffset)), animated: true)
-                //viewX = x_offset; viewY = min(y_offset + web.bounds.size.height/CGFloat(scrollSpeed), maxYOffset)
-            }else if(modeNumber == 2){
-                //web.scrollView.setContentOffset(CGPoint(x: viewX, y:viewY), animated: true)
-                print("クリック")
-            }else if(modeNumber == 3){
-                //ここでconfigを呼ぶ
-                openConfig()
-                
-                
-            }else{
-                //web.scrollView.setContentOffset(CGPoint(x: viewX, y:viewY), animated: true)
-                //指の検出ができていない
-            }
+        }else if(modeNumber == 1){
+            web.scrollView.setContentOffset(CGPoint(x: x_offset, y:min(y_offset + web.bounds.size.height/CGFloat(scrollSpeed), maxYOffset)), animated: true)
+            //viewX = x_offset; viewY = min(y_offset + web.bounds.size.height/CGFloat(scrollSpeed), maxYOffset)
+        }else if(modeNumber == 2){
+            //web.scrollView.setContentOffset(CGPoint(x: viewX, y:viewY), animated: true)
+            print("クリック")
+        }else if(modeNumber == 3){
+            //ここでconfigを呼ぶ
+            openConfig()
+            
+            
+        }else{
+            //web.scrollView.setContentOffset(CGPoint(x: viewX, y:viewY), animated: true)
+            //指の検出ができていない
         }
     }
     
     private func countTiming(){
         countTime += 1
-        if(countTime == 40){
-            countTime = 0
-        }
     }
     
     //描画色
@@ -400,7 +417,7 @@ class CameraViewController: UIViewController {
             evidenceBuffer.removeAll()
             // And draw the last segment of our draw path.
             updatePath(with: pointsPair, isLastPointsPair: true)
-            tipsColor = .red
+            tipsColor = colorList[configList[2]][1]
         }
         
         //optionalのアンラップ(中指)
@@ -415,15 +432,18 @@ class CameraViewController: UIViewController {
         guard let middlePipsUnwrap = middlePipsConverted else {
             return
         }
-        //関数で判定
-        judgeFingerPose(pointColor: &tipsColor, indexTips: pointsPair.indexTip, middleTips: middleTipsUnwrap, indexPips: indexPipsUnwrap, middlePips: middlePipsUnwrap, pinchFlag: pintched)
         
+        if(slideFlag){
+            //関数で判定
+            judgeFingerPose(pointColor: &tipsColor, indexTips: pointsPair.indexTip, middleTips: middleTipsUnwrap, indexPips: indexPipsUnwrap, middlePips: middlePipsUnwrap, pinchFlag: pintched)
+        }
         pintched = false
         
         if(configList[0] == 0){
             
         }else if(configList[0] == 1){
             cameraView.showPoints([pointsPair.thumbTip, pointsPair.indexTip, middleTipsUnwrap, indexPipsUnwrap, middlePipsUnwrap], color: tipsColor)//指先の表示
+            web.layer.addSublayer(overlayLayer)//指の表示
         }
     }
     
@@ -489,6 +509,38 @@ class CameraViewController: UIViewController {
         countPinchFrames = [Int]()
         for _ in (0 ..< pinchedThreshold + 10) {
             countPinchFrames.append(0)// 0 -> unpinchedを追加
+        }
+    }
+    
+    func closeTopLayer(){
+        //        if(countTime == 0){
+        //            let layer = view.layer.sublayers![4]
+        //            view.layer.sublayers![4] = view.layer.sublayers![0]
+        //            view.layer.sublayers![0]  = layer
+        //        }
+        if(countTime > 61){
+            topCloseFlag = true
+            return
+        }
+        
+        if(countTime == 60){
+            //webとtop
+            let layer = view.layer.sublayers![4]
+            view.layer.sublayers![4] = view.layer.sublayers![1]
+            view.layer.sublayers![1]  = layer
+            
+            let layer2 = view.layer.sublayers![1]
+            view.layer.sublayers![1] = view.layer.sublayers![2]
+            view.layer.sublayers![2]  = layer2
+            //
+            //            print(view.layer.sublayers![0].name as Any)
+            //            print(view.layer.sublayers![1].name as Any)
+            //            print(view.layer.sublayers![2].name as Any)
+            //            print(view.layer.sublayers![3].name as Any)
+            //            print(view.layer.sublayers![4].name as Any)
+            topCloseFlag = true
+        }else{
+            topCloseFlag = false
         }
     }
 }
