@@ -34,8 +34,8 @@ and open ./airTouch/airTouch/AirTouchWithStoryboard/HandPose.xcodeproj
  
 # Author
  
-[k17118](https://github.com/k17118)
-[x17062xxtanaka](https://github.com/x17062xxtanaka)
+[k17118](https://github.com/k17118),
+[x17062xxtanaka](https://github.com/x17062xxtanaka),
 [ShomaSon](https://github.com/ShomaSon)
 
 
