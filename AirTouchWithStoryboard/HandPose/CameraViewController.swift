@@ -116,6 +116,13 @@ class CameraViewController: UIViewController {
         
         topView = UIView(frame:CGRect(x: 0, y: 0, width: view.bounds.size.width, height:  view.bounds.size.height))
         topView.backgroundColor = .white
+        let topViewRect = CGRect(x: 0, y: 0, width: view.bounds.size.width/2, height:  view.bounds.size.height/2)
+        let topImageView = UIImageView(frame: topViewRect)
+        
+        topImageView.contentMode = .scaleAspectFit
+        topImageView.image = UIImage(named: "けいすけ")
+        topImageView.center = topView.center
+        topView.addSubview(topImageView)
         
         view.layer.addSublayer(overlayLayer)//指のマーカー表示
         view.layer.addSublayer(web.layer)//レイヤーとして追加
