@@ -1,6 +1,6 @@
 # airTouch
 
-画面に触らず，webを閲覧することのできるアプリです．
+画面に触らず，webを閲覧することのできるisoアプリです．
 指の形によって様々な機能が使えます．
  
 # DEMO
@@ -26,10 +26,9 @@
 # Usage
 ```bash
 git clone https://github.com/k17118/airTouch.git
+poen ./airTouch/airTouch/AirTouchWithStoryboard/HandPose.xcodeproj
 ```
-and open ./airTouch/airTouch/AirTouchWithStoryboard/HandPose.xcodeproj 
 
- 
 
  
 # Author
