@@ -4,7 +4,7 @@
 指の形によって様々な機能が使えます．
  
 # DEMO
- 
+ ![resize1](https://user-images.githubusercontent.com/50346054/115980186-82692000-a5c5-11eb-90f4-a86872d3410a.gif)
 
  
 # Features
