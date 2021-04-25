@@ -19,31 +19,23 @@
 * Xcode 12.4
 * swift 5
 * ios 14.0
-* UIKIt
-* AVFoundation
-* Vision
-* WebKit
- 
-# Installation
- 
-Requirementで列挙したライブラリなどのインストール方法を説明する
- 
-```bash
-pip install huga_package
-```
- 
-# Usage
-git clone https://github.com/k17118/airTouch.git
 
  
-# Note
+
  
-注意点などがあれば書く
+# Usage
+```bash
+git clone https://github.com/k17118/airTouch.git
+```
+and open ./airTouch/airTouch/AirTouchWithStoryboard/HandPose.xcodeproj 
+
+ 
+
  
 # Author
  
-作成情報を列挙する
- 
-* 作成者
-* 所属
-* E-mail
+[k17118](https://github.com/k17118)
+[x17062xxtanaka](https://github.com/x17062xxtanaka)
+[ShomaSon](https://github.com/ShomaSon)
+
+
