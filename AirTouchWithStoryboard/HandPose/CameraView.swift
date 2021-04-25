@@ -9,9 +9,10 @@ The camera view shows the feed from the camera, and renders the points
 import UIKit
 import AVFoundation
 
+var overlayLayer = CAShapeLayer()
 class CameraView: UIView {
 
-    var overlayLayer = CAShapeLayer()
+//    var overlayLayer = CAShapeLayer()
     private var pointsPath = UIBezierPath()
 
     //画面に追加
@@ -25,12 +26,12 @@ class CameraView: UIView {
     //指の描画
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupOverlay()
+        //setupOverlay()
     }
     //指の描画
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        setupOverlay()
+        //setupOverlay()
     }
     
     override func layoutSublayers(of layer: CALayer) {
@@ -51,7 +52,7 @@ class CameraView: UIView {
             pointsPath.move(to: point)
             
             //正円を描画
-                pointsPath.addArc(withCenter: point, radius: 5, startAngle: 0, endAngle: 2 * .pi, clockwise: true)
+            pointsPath.addArc(withCenter: point, radius: 5, startAngle: 0, endAngle: 2 * .pi, clockwise: true)
         }
         overlayLayer.fillColor = color.cgColor// 色の決定
         CATransaction.begin()
